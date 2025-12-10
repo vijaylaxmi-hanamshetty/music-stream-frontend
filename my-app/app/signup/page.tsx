@@ -75,7 +75,16 @@ export default function SignupPage() {
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
     try {
-      await signIn('google', { redirectTo: '/language' });
+      const result = await signIn('google', { 
+        redirect: false,
+      });
+      
+      if (result?.ok) {
+        router.push('/language');
+      } else {
+        setErrors({ ...errors, general: 'Google sign-up failed. Please try again.' });
+        setIsLoading(false);
+      }
     } catch (error) {
       setErrors({ ...errors, general: 'Google sign-up failed. Please try again.' });
       setIsLoading(false);
