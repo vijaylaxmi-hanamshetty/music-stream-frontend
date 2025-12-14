@@ -12,13 +12,88 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-
-
-
 model User {
-  id        Int       @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
+  email     String?       @unique
+  password  String?
+  googleId  String?       @unique
+  createdAt DateTime      @default(now())
+  profile   UserProfile?  
+  settings  UserSettings? 
+  favorites Favorite[]
+  playlists Playlist[]
+  history   ListeningHistory[]
+  notifications Notification[]
+
+}
+
+model UserProfile {
+  id           Int     @id @default(autoincrement())
+  userId       Int     @unique
+  fullName     String? @map("full_name")
+  profileImage String? @map("profile_image")
+  bio          String?
+
+  user         User    @relation(fields: [userId], references: [id])
+}
+
+model UserSettings {
+  id                   Int     @id @default(autoincrement())
+  userId               Int     @unique
+  darkMode             Boolean @default(false) @map("dark_mode")
+  notificationsEnabled Boolean @default(true)  @map("notifications_enabled")
+  language             String  @default("en")
+
+  user                 User    @relation(fields: [userId], references: [id])
+}
+
+model Favorite {
+  id              String   @id @default(cuid())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          Int
+  spotifyTrackId  String
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, spotifyTrackId])
+}
+
+model Playlist {
+  id        Int        @id @default(autoincrement())
+  user      User           @relation(fields: [userId], references: [id])
+  userId    Int
   name      String
-  email     String    @unique
-  password  String
-  createdAt DateTime  @default(now())
+  createdAt DateTime       @default(now())
+  songs     PlaylistSong[]
+}
+
+model PlaylistSong {
+  id             Int  @id @default(autoincrement())
+  playlist       Playlist @relation(fields: [playlistId], references: [id])
+  playlistId     Int
+  spotifyTrackId String
+  addedAt        DateTime @default(now())
+
+  @@unique([playlistId, spotifyTrackId])
+} 
+model ListeningHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  spotifyTrackId String
+  playedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String?
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
